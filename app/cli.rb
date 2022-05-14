@@ -22,7 +22,11 @@ class Cli
     @user = Butler.new.call
   end
 
-  def user_interface; end
+  def user_interface
+    loop do
+      return if UserInterface.new.call == :back
+    end
+  end
 
   def customer_interface; end
 end
