@@ -28,5 +28,7 @@ class Cli
     end
   end
 
-  def customer_interface; end
+  def customer_interface
+    CustomerInterface.new.call
+  end
 end

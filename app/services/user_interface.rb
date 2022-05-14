@@ -63,7 +63,7 @@ class UserInterface
 
     prompt.ask(question, convert: :int, required: true) do |q|
       q.in('0-20')
-      q.messages[:range?] = '%<value>s out of expected range %<in>s'
+      q.messages[:range?] = '%{value} out of expected range %{in}'
     end
   end
 
@@ -81,8 +81,8 @@ class UserInterface
   def ask_product_price(label:)
     question = "What is the price of #{label}?"
     prompt.ask(question, convert: :float, required: true) do |q|
-      q.in('0-100')
-      q.messages[:range?] = '%<value>s out of expected range %<in>s'
+      q.in('0.5-100')
+      q.messages[:range?] = '%{value} out of expected range %{in}'
     end
   end
 

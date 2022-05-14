@@ -17,6 +17,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_14_154652) do
     t.integer "count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["amount"], name: "index_coins_on_amount", unique: true
     t.index ["label"], name: "index_coins_on_label", unique: true
   end
 
