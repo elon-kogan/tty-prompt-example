@@ -17,7 +17,7 @@ bundle exec ruby application.rb
 
 ### Seeds
 
-- One user (like administrator). Its data for login: `admin`-`password`
+- One user (for products managing). Its data for login: `admin`-`password`
 - Coins:
   - 10 quarters
   - 10 halfs
