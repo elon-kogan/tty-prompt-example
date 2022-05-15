@@ -10,9 +10,8 @@ class CustomerInterface
     @product = ask_product
     ask_coins
     sell_product
-    give_out_change
-  rescue BackException
-    return_back_wallet
+  rescue BackException, ActiveRecord::Rollback
+    give_money
     :back
   end
 
@@ -44,24 +43,36 @@ class CustomerInterface
   end
 
   def sell_product
-    # TODO; add coins to DB
-    prompt.ok("#{product.label} costs #{product.price}; You paid #{wallet_sum}")
-    product.update(count: product.count - 1)
+    ActiveRecord::Base.transaction do
+      add_coins_from_wallet
+      give_product
+      prompt.ok("#{product.label} costs #{product.price}; You paid #{wallet_sum}")
+
+      give_out_change
+    end
+  end
+
+  def add_coins_from_wallet
+    wallet.each { |coin| coin.count += 1 }
+    wallet.uniq.each(&:save!)
+  end
+
+  def give_product
+    product.update!(count: product.count - 1)
   end
 
   def give_out_change
-    return_back_wallet(current_wallet: count_change, key: 'change')
-  end
+    count_change.each { |coin| coin.count -= 1 }
+    count_change.uniq.each(&:save!)
 
-  def count_change
-    ChangeCounter.new(amount: wallet_sum - product.price).call
+    give_money(current_wallet: count_change, key: 'change')
   end
 
   def enough_money?
     wallet_sum >= product.price
   end
 
-  def return_back_wallet(current_wallet: wallet, key: 'money')
+  def give_money(current_wallet: wallet, key: 'money')
     return if current_wallet.blank?
 
     message = "Don't forget your #{key}:"
@@ -71,6 +82,10 @@ class CustomerInterface
     end
     filtered_wallet.each { |label, count| message += " #{count} * #{label};" }
     prompt.warn(message)
+  end
+
+  def count_change
+    @count_change ||= ChangeCounter.new(amount: wallet_sum - product.price).call
   end
 
   def coin_options
