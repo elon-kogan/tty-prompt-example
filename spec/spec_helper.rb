@@ -16,9 +16,11 @@
 #
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
-Bundler.require(:default, :test)
-require_all './app'
+ENV['RACK_ENV'] ||= 'test'
+Bundler.require(:default, ENV['RACK_ENV'])
 require 'support/factory_bot'
+require 'support/database_cleaner'
+require_all './app'
 
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate

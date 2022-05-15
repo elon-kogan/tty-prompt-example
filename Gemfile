@@ -22,5 +22,9 @@ group :development, :test do
   gem 'factory_bot'
   gem 'pry'
   gem 'rack-test'
+end
+
+group :test do
   gem 'rspec'
+  gem 'database_cleaner-active_record'
 end

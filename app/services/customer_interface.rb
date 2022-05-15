@@ -80,7 +80,7 @@ class CustomerInterface
       result[coin.label] ||= 0
       result[coin.label] += 1
     end
-    filtered_wallet.each { |label, count| message += " #{count} * #{label};" }
+    filtered_wallet.each { |label, count| message += " #{label} * #{count};" }
     prompt.warn(message)
   end
 
