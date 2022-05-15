@@ -2,51 +2,63 @@
 
 describe Butler, type: :service do
   describe '#call' do
-    let(:butler) { described_class.new }
-    subject { butler.call }
+    subject(:call_service) { service.call }
 
+    let(:service) { described_class.new }
     let(:prompt) { TTY::Prompt.new }
+    let(:is_customer) { true }
 
-    before { allow(butler).to receive(:prompt).and_return(prompt) }
+    before do
+      allow(service).to receive(:prompt).and_return(prompt)
+      allow(prompt).to receive(:yes?).with('Are you Customer?').and_return(is_customer)
+    end
 
     it 'asks about customer' do
-      expect(prompt).to receive(:yes?).ordered.with('Are you Customer?').and_return(true)
-      subject
+      call_service
+      expect(prompt).to have_received(:yes?).with('Are you Customer?')
     end
 
-    context 'when customer has arrived' do
-      before { expect(prompt).to receive(:yes?).ordered.with('Are you Customer?').and_return(true) }
-      it { is_expected.to eq(:customer) }
-    end
+    context('when customer has arrived') { it { is_expected.to eq(:customer) } }
 
     context 'when user has arrived' do
-      let(:correct_password) { 'correct_password' }
+      let(:is_customer) { false }
       let(:user) { build_stubbed(:user, password: correct_password) }
+      let(:founded_user) { user }
+      let(:correct_password) { 'correct_password' }
+      let(:passed_password) { correct_password }
+      let(:passed_name) { 'user name' }
 
       before do
-        expect(prompt).to receive(:yes?).ordered.with('Are you Customer?').and_return(false)
-        expect(prompt).to receive(:ask).ordered.with('Name?', any_args).and_return(passed_name)
-        expect(prompt).to receive(:mask).ordered
-                                        .with('Password?', any_args).and_return(passed_password)
+        allow(prompt).to receive(:ask).with('Name?', any_args).and_return(passed_name)
+        allow(prompt).to receive(:mask).with('Password?', any_args).and_return(passed_password)
+        allow(User).to receive(:find_by).with(name: passed_name).and_return(founded_user)
+        allow(prompt).to receive(:warn).and_return(true)
       end
 
-      context 'when it is existed user' do
-        let(:passed_name) { user.name }
-        before { expect(User).to receive(:find_by).with(name: user.name).and_return(user) }
+      context 'when name and password are correct' do
+        it('responds user successfully') { expect(call_service).to eq(user) }
 
-        context 'when password is correct' do
-          let(:passed_password) { correct_password }
-
-          it { is_expected.to eq(user) }
+        it('does not sow error') do
+          call_service
+          expect(prompt).not_to have_received(:warn)
         end
+      end
 
-        context 'when password is incorrect' do
-          let(:passed_password) { 'incorrect_password' }
+      context 'when there is no user with passed name' do
+        let(:founded_user) { nil }
 
-          it 'shows wrong password message and starts from the beginning' do
-            expect(prompt).to receive(:warn).ordered.with('Wrong password')
-            subject
-          end
+        it 'shows wrong password message' do
+          call_service
+          expect(prompt).to have_received(:warn).with('Wrong password')
+        end
+      end
+
+      context 'when password is incorrect' do
+        let(:passed_password) { 'incorrect_password' }
+
+        it 'shows wrong password message' do
+          call_service
+          expect(prompt).to have_received(:warn).with('Wrong password')
         end
       end
     end
